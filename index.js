@@ -91,39 +91,76 @@ async function getWeatherForecast() {
     const data = await response.json();
 
     if (!data.list) {
-      throw new Error('Не удалось получить прогноз погоды');
+      throw new Error('Не вдалося отримати прогноз погоди');
     }
 
-    const forecast = data.list
-      .filter((_, index) => index % 8 === 0) // Прогноз каждый день (данные каждые 3 часа, 8 записей на день)
-      .map(day => {
-        const date = DateTime.fromSeconds(day.dt).setZone('Europe/Kiev').toFormat('dd/MM/yyyy');
-        const weatherDescription = day.weather[0].description;
-        const temperature = day.main.temp;
-        const feelsLike = day.main.feels_like;
-        const humidity = day.main.humidity;
-        const windSpeed = day.wind.speed;
-        const weatherIcon = getWeatherIcon(weatherDescription);
+    // Зберігаємо прогнози для сьогодні і завтра
+    const today = DateTime.now().setZone('Europe/Kiev').startOf('day');
+    const tomorrow = today.plus({ days: 1 });
+    const dayAfterTomorrow = today.plus({ days: 2 });
 
-        return `
-          ${weatherIcon} Прогноз на ${date}:
-          Опис: ${weatherDescription}
-          Температура: ${temperature}°C (відчувається як ${feelsLike}°C)
-          Вологість: ${humidity}%
-          Швидкість вітру: ${windSpeed} м/с
+    const forecasts = {};
+
+    data.list.forEach((entry) => {
+      const date = DateTime.fromSeconds(entry.dt).setZone('Europe/Kiev');
+
+      if (date >= today && date < dayAfterTomorrow) {
+        const dayKey = date.toFormat('dd/MM/yyyy');
+        if (!forecasts[dayKey]) {
+          forecasts[dayKey] = [];
+        }
+
+        forecasts[dayKey].push({
+          time: date.toFormat('HH:mm'),
+          weatherIcon: getWeatherIcon(entry.weather[0].description),
+          weatherDescription: entry.weather[0].description,
+          temperature: entry.main.temp,
+          feelsLike: entry.main.feels_like,
+          humidity: entry.main.humidity,
+          windSpeed: entry.wind.speed,
+        });
+      }
+    });
+
+    let message = `🌤️ Прогноз погоди в Золочеві:\n`;
+    for (const [day, forecastList] of Object.entries(forecasts)) {
+      message += `\n📅 ${day}:\n`;
+      forecastList.forEach((forecast) => {
+        message += `
+          ${forecast.weatherIcon} ${forecast.time}:
+          Опис: ${forecast.weatherDescription}
+          Температура: ${forecast.temperature}°C (відчувається як ${forecast.feelsLike}°C)
+          Вологість: ${forecast.humidity}%
+          Швидкість вітру: ${forecast.windSpeed} м/с
         `;
-      }).join('\n');
+      });
+    }
 
-    const message = `🌤️ Прогноз погоди на тиждень в Золочеві:\n${forecast}`;
     await bot.sendMessage(chatId, message);
   } catch (error) {
     console.error('Помилка при отриманні прогнозу погоди:', error);
   }
 }
 
+
+
+function getRandomRecipeUrl() {
+  const randomNumber = Math.floor(Math.random() * 147000) + 1; // Рандомний номер від 1 до 147000
+  return `https://www.povarenok.ru/recipes/show/${randomNumber}/`;
+}
+
+async function sendRandomRecipe() {
+  const recipeUrl = getRandomRecipeUrl();
+  const message = `🍲 Рецепт: ${recipeUrl}`;
+  await bot.sendMessage(chatId, message);
+}
+
 // Відправка погоди одразу після запуску для тестування
-getWeather();
+//getWeather();
 getWeatherForecast();
+
+// Відправка рандомного рецепту одразу після запуску
+sendRandomRecipe();
 
 const weatherUpdateTimes = [
   { hour: 8, minute: 0 }, // Ранок
@@ -143,15 +180,18 @@ function scheduleWeatherUpdates() {
     const delay = nextUpdate.diff(now).as('milliseconds');
 
     setTimeout(function updateWeather() {
-      getWeather();
+      //getWeather();
       getWeatherForecast();
       setInterval(() => {
-        getWeather();
+        //getWeather();
         getWeatherForecast();
       }, 24 * 60 * 60 * 1000); // Повторять каждые 24 часа
     }, delay);
   });
 }
+
+// Відправка рандомного рецепту кожні 2 години
+setInterval(sendRandomRecipe, 2 * 60 * 60 * 1000); // 2 години
 
 // Запуск функцій
 scheduleWeatherUpdates();
