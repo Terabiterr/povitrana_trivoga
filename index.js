@@ -145,8 +145,8 @@ async function getWeatherForecast() {
 
 
 function getRandomRecipeUrl() {
-  const randomNumber = Math.floor(Math.random() * 147000) + 1; // Рандомний номер від 1 до 147000
-  return `https://www.povarenok.ru/recipes/show/${randomNumber}/`;
+  const randomNumber = Math.floor(Math.random() * 150000) + 1; // Рандомний номер від 1 до 147000
+  return `https://www.russianfood.com/recipes/recipe.php?rid=${randomNumber}`;
 }
 
 async function sendRandomRecipe() {
