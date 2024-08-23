@@ -157,10 +157,10 @@ async function sendRandomRecipe() {
 
 // Відправка погоди одразу після запуску для тестування
 //getWeather();
-getWeatherForecast();
+//getWeatherForecast();
 
 // Відправка рандомного рецепту одразу після запуску
-sendRandomRecipe();
+//sendRandomRecipe();
 
 const weatherUpdateTimes = [
   { hour: 8, minute: 0 }, // Ранок
@@ -191,7 +191,7 @@ function scheduleWeatherUpdates() {
 }
 
 // Відправка рандомного рецепту кожні 2 години
-setInterval(sendRandomRecipe, 2 * 60 * 60 * 1000); // 2 години
+//setInterval(sendRandomRecipe, 2 * 60 * 60 * 1000); // 2 години
 
 // Запуск функцій
 scheduleWeatherUpdates();
