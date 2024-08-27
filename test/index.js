@@ -1,57 +1,8 @@
-const TelegramBot = require('node-telegram-bot-api');
 const fetch = require('node-fetch'); // Импортируем библиотеку для выполнения HTTP-запросов
 const { DateTime } = require('luxon'); // Импортируем DateTime из luxon для работы с датой и временем
 const { createCanvas } = require('canvas'); // Импортируем createCanvas для создания изображений
 const cheerio = require('cheerio'); // Импортируем cheerio для парсинга HTML
 const fs = require('fs'); // Импортируем fs для работы с файловой системой
-
-const telegramToken = '7039136784:AAGcGaj9VbG_O4kSmjPpNuYy3NpVu7Ff3hU';
-const chatId = '-1002167888799';
-const weatherToken = 'fc01a049e901138a07c480e0657cace0';
-
-const bot = new TelegramBot(telegramToken);
-
-const checkAlertsUrl = 'http://ubilling.net.ua/aerialalerts/?json=true';
-const regionToCheck = 'Харківська область'; // Название региона для проверки
-const lat = 50.274584; //Золочів Харківська область
-const lon = 35.975329; //Золочів Харківська область
-const weatherUrl = `http://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${weatherToken}&units=metric&lang=ua`;
-const weatherForecastUrl = `http://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${weatherToken}&units=metric&lang=ua`;
-
-let previousAlertStatus = false; // Хранение предыдущего статуса тревоги
-let alertStartTime = null; // Время начала тревоги
-let alertEndTime = null; // Время окончания тревоги
-
-function getCurrentTimeInKiev() {
-  return DateTime.now().setZone('Europe/Kiev').toFormat('HH:mm:ss dd/MM/yyyy');
-}
-
-async function checkAlert() {
-  try {
-    const response = await fetch(checkAlertsUrl);
-    const data = await response.json();
-    const states = data.states;
-
-    const alertData = states[regionToCheck];
-    const alertStatus = alertData ? alertData.alertnow : false;
-
-    if (alertStatus !== previousAlertStatus) {
-      previousAlertStatus = alertStatus;
-
-      if (alertStatus) {
-        alertStartTime = getCurrentTimeInKiev();
-        const message = `🚨 Увага! Золочів - у харківській області повітряна тривога розпочалася о ${alertStartTime} 😭`;
-        await bot.sendMessage(chatId, message);
-      } else {
-        alertEndTime = getCurrentTimeInKiev();
-        const message = `✅ Увага! Золочів - відбій тривоги о ${alertEndTime} 😍`;
-        await bot.sendMessage(chatId, message);
-      }
-    }
-  } catch (error) {
-    console.error('Помилка при перевірці тривоги:', error);
-  }
-}
 
 // URL для получения данных о топливе
 const fuelUrl = 'https://index.minfin.com.ua/ua/markets/fuel/reg/harkovskaya/';
@@ -246,8 +197,6 @@ async function sendDailyReport() {
         const currencyData = await getCurrencyRates(); // Получаем данные о курсах валют
         const imagePath = await createImage(fuelData, currencyData); // Создаем изображение отчета
         console.log(`Отчет сохранен как ${imagePath}`); // Выводим путь к отчету
-        bot.sendMessage(chatId, "Паливо, курс валют на сьогодні --->>> " + getCurrentTimeInKiev())
-        bot.sendPhoto(chatId, imagePath)
     } catch (error) {
         console.error('Ошибка при создании и сохранении отчета:', error); // Обрабатываем ошибки
     }
@@ -257,16 +206,14 @@ async function sendDailyReport() {
 sendDailyReport().then(() => {
     const now = DateTime.now().setZone('Europe/Kiev'); // Получаем текущее время в Киевском часовом поясе
     const nextRun = now.set({ hour: 8, minute: 0, second: 0 }); // Устанавливаем время следующего запуска на 8:00
-    
+
     let timeToNextRun = nextRun.diff(now).as('milliseconds'); // Рассчитываем разницу во времени до следующего запуска
     if (timeToNextRun < 0) {
         timeToNextRun += 24 * 60 * 60 * 1000; // Если время уже прошло, добавляем 24 часа
     }
+
     setTimeout(() => {
         sendDailyReport(); // Запускаем отчет
         setInterval(sendDailyReport, 24 * 60 * 60 * 1000); // Запускаем отчет ежедневно
     }, timeToNextRun);
 });
-
-
-setInterval(checkAlert, 1000);
