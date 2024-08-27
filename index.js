@@ -15,8 +15,8 @@ if (fs.existsSync(fontPath)) {
     process.exit(1);
 }
 
-const telegramToken = '6835752391:AAEQU0rsyL-v2b6gemYa2pZQ3jdZM9oWcoA';
-const chatId = '597175973';
+const telegramToken = '7039136784:AAGcGaj9VbG_O4kSmjPpNuYy3NpVu7Ff3hU';
+const chatId = '-1002167888799';
 const weatherToken = 'fc01a049e901138a07c480e0657cace0';
 
 const bot = new TelegramBot(telegramToken);
@@ -155,7 +155,7 @@ const CELL_HEIGHT = 30; // Высота ячейки
 const HEADER_HEIGHT = 40; // Высота заголовка
 const MARGIN = 20; // Отступ от края страницы
 const CANVAS_WIDTH = 940; // Ширина холста
-const CANVAS_HEIGHT = 1000; // Высота холста
+const CANVAS_HEIGHT = 580; // Высота холста
 
 // Функция для создания изображения
 async function createImage(fuelData, currencyData) {
@@ -211,7 +211,8 @@ async function createImage(fuelData, currencyData) {
     y += drawTable(fuelData.headers, fuelData.rows, MARGIN, y) + MARGIN;
 
     ctx.font = 'bold 20px "DejaVu Sans"';
-    ctx.fillText('Середній курс валют в банках:', MARGIN, y);
+    const course_message = '                                                      Середній курс валют в банках:'
+    ctx.fillText(course_message, MARGIN, y);
     y += MARGIN;
 
     y += drawTable(
@@ -226,13 +227,20 @@ async function createImage(fuelData, currencyData) {
     return './report.jpg'
 }
 
+function getRandomNumber(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 // Функция для отправки ежедневного отчета
 async function sendDailyReport() {
     try {
         const fuelData = await fetchFuelPrices(); // Получаем данные о топливе
         const currencyData = await getCurrencyRates(); // Получаем данные о курсах валют
         const imagePath = await createImage(fuelData, currencyData); // Создаем изображение отчета
-        const message = "Паливо, курс валют на сьогодні --->>> " + getCurrentTimeInKiev()
+        const message = `
+        Рецепт дня🍔, ціна на паливо⛽, курс🤑 на сьогодні: ${getCurrentTimeInKiev()}:
+        https://www.povarenok.ru/recipes/show/${getRandomNumber(100000, 140000)}/
+        `
         bot.sendMessage(chatId, message)
         bot.sendPhoto(chatId, imagePath)
     } catch (error) {
