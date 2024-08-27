@@ -5,8 +5,8 @@ const { createCanvas } = require('canvas'); // Импортируем createCanv
 const cheerio = require('cheerio'); // Импортируем cheerio для парсинга HTML
 const fs = require('fs'); // Импортируем fs для работы с файловой системой
 
-const telegramToken = '6835752391:AAEQU0rsyL-v2b6gemYa2pZQ3jdZM9oWcoA';
-const chatId = '597175973';
+const telegramToken = '7039136784:AAGcGaj9VbG_O4kSmjPpNuYy3NpVu7Ff3hU';
+const chatId = '-1002167888799';
 const weatherToken = 'fc01a049e901138a07c480e0657cace0';
 
 const bot = new TelegramBot(telegramToken);
