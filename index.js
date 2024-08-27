@@ -62,7 +62,7 @@ const currencyUrl = 'https://minfin.com.ua/ua/currency/usd/';
 // Функция для получения данных о топливе
 async function fetchFuelPrices() {
     try {
-        const response = await fetch(fuelUrl); // Выполняем запрос к URL для получения данных о топливе
+        const response = await fetch(fuelUrl, { headers: { 'Content-Type': 'application/json; charset=utf-8' }}); // Выполняем запрос к URL для получения данных о топливе
         const data = await response.text(); // Получаем текст ответа
         const $ = cheerio.load(data); // Загружаем HTML в cheerio для парсинга
 
@@ -109,7 +109,7 @@ async function fetchFuelPrices() {
 // Функция для получения курса валют
 async function getCurrencyRates() {
     try {
-        const response = await fetch(currencyUrl); // Выполняем запрос к URL для получения курса валют
+        const response = await fetch(currencyUrl, { headers: { 'Content-Type': 'application/json; charset=utf-8' }}); // Выполняем запрос к URL для получения курса валют
         const body = await response.text(); // Получаем текст ответа
         const $ = cheerio.load(body); // Загружаем HTML в cheerio для парсинга
 
