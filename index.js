@@ -1,9 +1,19 @@
 const TelegramBot = require('node-telegram-bot-api');
 const fetch = require('node-fetch'); // Импортируем библиотеку для выполнения HTTP-запросов
 const { DateTime } = require('luxon'); // Импортируем DateTime из luxon для работы с датой и временем
-const { createCanvas } = require('canvas'); // Импортируем createCanvas для создания изображений
+const { createCanvas, registerFont } = require('canvas'); // Импортируем createCanvas для создания изображений
 const cheerio = require('cheerio'); // Импортируем cheerio для парсинга HTML
 const fs = require('fs'); // Импортируем fs для работы с файловой системой
+
+const fontPath = './DejaVuSans.ttf';
+
+if (fs.existsSync(fontPath)) {
+    registerFont(fontPath, { family: 'DejaVuSans' });
+} else {
+    console.error(`Font file not found at ${fontPath}`);
+    // Fallback to a different font or exit the process
+    process.exit(1);
+}
 
 const telegramToken = '6835752391:AAEQU0rsyL-v2b6gemYa2pZQ3jdZM9oWcoA';
 const chatId = '597175973';
@@ -149,65 +159,61 @@ const CANVAS_HEIGHT = 1000; // Высота холста
 
 // Функция для создания изображения
 async function createImage(fuelData, currencyData) {
-    const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT); // Создаем холст
-    const ctx = canvas.getContext('2d'); // Получаем контекст рисования
+    const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+    const ctx = canvas.getContext('2d');
 
-    // Функция для рисования текста в ячейке
     function drawCellText(text, x, y, width, height) {
-        ctx.font = '16px Arial'; // Устанавливаем шрифт
-        ctx.textAlign = 'center'; // Выравнивание текста по центру
-        ctx.textBaseline = 'middle'; // Вертикальное выравнивание по центру
-        ctx.fillStyle = 'black'; // Цвет текста
-        ctx.fillText(text, x + width / 2, y + height / 2); // Рисуем текст
+        ctx.font = '16px "DejaVu Sans"'; // Используем шрифт, поддерживающий кириллицу
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'black';
+        ctx.fillText(text, x + width / 2, y + height / 2);
     }
 
-    // Функция для рисования таблицы
     function drawTable(headers, rows, x, y) {
-        const rowHeight = CELL_HEIGHT; // Высота строки
-        const colCount = headers.length; // Количество колонок
-        const tableWidth = colCount * CELL_WIDTH; // Ширина таблицы
+        const rowHeight = CELL_HEIGHT;
+        const colCount = headers.length;
+        const tableWidth = colCount * CELL_WIDTH;
 
-        ctx.font = 'bold 16px Arial'; // Шрифт заголовка
-        ctx.fillStyle = 'lightgrey'; // Цвет фона заголовка
-        ctx.fillRect(x, y, tableWidth, HEADER_HEIGHT); // Рисуем фон заголовка
-        ctx.strokeRect(x, y, tableWidth, HEADER_HEIGHT); // Рисуем рамку заголовка
+        ctx.font = 'bold 16px "DejaVu Sans"';
+        ctx.fillStyle = 'lightgrey';
+        ctx.fillRect(x, y, tableWidth, HEADER_HEIGHT);
+        ctx.strokeRect(x, y, tableWidth, HEADER_HEIGHT);
 
         headers.forEach((header, i) => {
-            drawCellText(header, x + i * CELL_WIDTH, y, CELL_WIDTH, HEADER_HEIGHT); // Рисуем заголовки
-                ctx.strokeRect(x + i * CELL_WIDTH, y, CELL_WIDTH, HEADER_HEIGHT); // Рисуем границы ячеек
+            drawCellText(header, x + i * CELL_WIDTH, y, CELL_WIDTH, HEADER_HEIGHT);
+            ctx.strokeRect(x + i * CELL_WIDTH, y, CELL_WIDTH, HEADER_HEIGHT);
         });
 
-        ctx.font = '16px Arial'; // Шрифт данных
+        ctx.font = '16px "DejaVu Sans"';
         rows.forEach((row, r) => {
-            const rowY = y + HEADER_HEIGHT + r * rowHeight; // Определяем Y-координату строки
-            ctx.strokeRect(x, rowY, tableWidth, rowHeight); // Рисуем границы строки
+            const rowY = y + HEADER_HEIGHT + r * rowHeight;
+            ctx.strokeRect(x, rowY, tableWidth, rowHeight);
             row.forEach((cell, c) => {
-                drawCellText(cell, x + c * CELL_WIDTH, rowY, CELL_WIDTH, rowHeight); // Рисуем ячейки
-                ctx.strokeRect(x + c * CELL_WIDTH, rowY, CELL_WIDTH, rowHeight); // Рисуем границы ячеек
+                drawCellText(cell, x + c * CELL_WIDTH, rowY, CELL_WIDTH, rowHeight);
+                ctx.strokeRect(x + c * CELL_WIDTH, rowY, CELL_WIDTH, rowHeight);
             });
         });
 
-        return HEADER_HEIGHT + rows.length * rowHeight; // Возвращаем высоту таблицы
+        return HEADER_HEIGHT + rows.length * rowHeight;
     }
 
-    ctx.fillStyle = 'white'; // Устанавливаем цвет фона
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // Рисуем фон холста
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    let y = MARGIN; // Начальная позиция Y
+    let y = MARGIN;
 
-    ctx.font = 'bold 20px Arial'; // Шрифт заголовков
-    ctx.fillStyle = 'black'; // Цвет заголовков
-    ctx.fillText('Таблица с топливом:', MARGIN, y); // Рисуем заголовок таблицы топливных цен
-    y += MARGIN; // Смещаем Y-координату
+    ctx.font = 'bold 20px "DejaVu Sans"';
+    ctx.fillStyle = 'black';
+    ctx.fillText('Таблица с топливом:', MARGIN, y);
+    y += MARGIN;
 
-    // Рисуем таблицу с ценами на топливо
     y += drawTable(fuelData.headers, fuelData.rows, MARGIN, y) + MARGIN;
 
-    ctx.font = 'bold 20px Arial'; // Шрифт заголовков
-    ctx.fillText('                                                      Середній курс валют в банках:', MARGIN, y); // Рисуем заголовок таблицы валют
-    y += MARGIN; // Смещаем Y-координату
+    ctx.font = 'bold 20px "DejaVu Sans"';
+    ctx.fillText('Середній курс валют в банках:', MARGIN, y);
+    y += MARGIN;
 
-    // Рисуем таблицу с курсами валют в банках
     y += drawTable(
         ['Валюта', 'Купівля', 'Продаж', 'Курс НБУ'],
         currencyData.bankRates.map(rate => [rate.currency, rate.buy, rate.sell, rate.nbu]),
@@ -215,28 +221,9 @@ async function createImage(fuelData, currencyData) {
         y
     ) + MARGIN;
 
-    ctx.font = 'bold 20px Arial'; // Шрифт заголовков
-    ctx.fillText('                             Готівковий курс:', MARGIN, y); // Рисуем заголовок таблицы готівкового курса
-    y += MARGIN; // Смещаем Y-координату
-
-    // Рисуем таблицу с готівковыми курсами
-    y += drawTable(
-        ['Валюта', 'Купівля', 'Продаж'],
-        currencyData.cashRates.map(rate => [rate.currency, rate.buy, rate.sell]),
-        MARGIN,
-        y
-    );
-
-    const path = './report.jpg'; // Путь к файлу отчета
-    const out = fs.createWriteStream(path); // Создаем поток для записи файла
-    const stream = canvas.createJPEGStream(); // Создаем поток JPEG изображения
-    stream.pipe(out); // Записываем изображение в файл
-
-    // Возвращаем промис, который разрешается после завершения записи
-    return new Promise((resolve, reject) => {
-        out.on('finish', () => resolve(path)); // Успешное завершение записи
-        out.on('error', (err) => reject(err)); // Обработка ошибок записи
-    });
+    const buffer = canvas.toBuffer('image/png');
+    fs.writeFileSync('report.jpg', buffer);
+    return './report.jpg'
 }
 
 // Функция для отправки ежедневного отчета
