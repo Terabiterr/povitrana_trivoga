@@ -194,5 +194,5 @@ function scheduleWeatherUpdates() {
 //setInterval(sendRandomRecipe, 2 * 60 * 60 * 1000); // 2 години
 
 // Запуск функцій
-scheduleWeatherUpdates();
+//scheduleWeatherUpdates();
 setInterval(checkAlert, 1000);
