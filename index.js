@@ -248,6 +248,8 @@ async function sendDailyReport() {
     }
 }
 
+setInterval(checkAlert, 1000);
+
 // Отправляем отчет сразу при старте
 sendDailyReport().then(() => {
     const now = DateTime.now().setZone('Europe/Kiev'); // Получаем текущее время в Киевском часовом поясе
@@ -262,6 +264,3 @@ sendDailyReport().then(() => {
         setInterval(sendDailyReport, 24 * 60 * 60 * 1000); // Запускаем отчет ежедневно
     }, timeToNextRun);
 });
-
-
-setInterval(checkAlert, 1000);
