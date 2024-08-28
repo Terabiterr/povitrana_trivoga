@@ -248,7 +248,7 @@ async function sendDailyReport() {
     }
 }
 
-setInterval(checkAlert, 1000);
+setInterval(checkAlert, 5000);
 
 // Отправляем отчет сразу при старте
 sendDailyReport().then(() => {
@@ -260,7 +260,7 @@ sendDailyReport().then(() => {
         timeToNextRun += 24 * 60 * 60 * 1000; // Если время уже прошло, добавляем 24 часа
     }
     setTimeout(() => {
-        sendDailyReport(); // Запускаем отчет
+        sendDailyReport(); // Запускаем отчет 
         setInterval(sendDailyReport, 24 * 60 * 60 * 1000); // Запускаем отчет ежедневно
     }, timeToNextRun);
 });
