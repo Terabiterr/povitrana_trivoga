@@ -248,7 +248,7 @@ async function sendDailyReport() {
     }
 }
 
-setInterval(checkAlert, 5000);
+//setInterval(checkAlert, 5000);
 
 // Отправляем отчет сразу при старте
 sendDailyReport().then(() => {
